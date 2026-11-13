@@ -1,0 +1,9 @@
+{
+  "name": "Project Millenia",
+  "short_name": "Millenia",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "description": "Private year and event memorization app."
+}

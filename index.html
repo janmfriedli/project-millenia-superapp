@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <title>Project Millenia</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <section class="card intro">
+      <h1>Project Millenia</h1>
+    </section>
+
+    <section id="home" class="card home">
+      <button id="chooseQuizYear" class="homeBtn" type="button">Quiz by Year</button>
+      <button id="chooseQuizEvent" class="homeBtn" type="button">Quiz by Event</button>
+      <button id="chooseQuizStarred" class="homeBtn" type="button">★ Starred Years (0)</button>
+      <button id="chooseSwipe" class="homeBtn" type="button">Swipe Mode</button>
+    </section>
+
+    <section id="quiz" class="card quiz hidden">
+      <div class="topline">
+        <span id="progress">0 / 0</span>
+        <span id="score">Correct: 0 · Again: 0</span>
+      </div>
+
+      <button id="quizStarBtn" class="starBtn" type="button" aria-pressed="false">☆ Star this year</button>
+
+      <div id="prompt" class="prompt">What happened in</div>
+      <div id="question" class="question">—</div>
+
+      <button id="revealBtn" class="primary" type="button">Reveal answer</button>
+
+      <div id="answerBox" class="answer hidden">
+        <div id="answerLabel" class="answerLabel">Answer</div>
+        <div id="answerMain" class="answerMain">—</div>
+        <div id="answerDescription" class="answerDescription"></div>
+      </div>
+
+      <div id="gradeBtns" class="grade hidden">
+        <button id="againBtn" class="again" type="button">Try Again</button>
+        <button id="correctBtn" class="correct" type="button">Correct</button>
+      </div>
+    </section>
+
+    <section id="swipeView" class="card swipeView hidden">
+      <div class="topline">
+        <span id="swipePosition">—</span>
+        <span>Swipe right: next · Swipe left: previous</span>
+      </div>
+
+      <button id="swipeStarBtn" class="starBtn" type="button" aria-pressed="false">☆ Star this year</button>
+
+      <div class="prompt">Year</div>
+      <div id="swipeYear" class="question">—</div>
+      <div id="swipeEvents" class="answerMain"></div>
+
+      <div class="grade">
+        <button id="prevYearBtn" class="secondary" type="button">Previous year</button>
+        <button id="nextYearBtn" class="primary" type="button">Next year</button>
+      </div>
+    </section>
+
+    <section id="quizControls" class="card controls hidden">
+      <label>
+        From year
+        <input id="fromYear" type="number" inputmode="numeric" />
+      </label>
+      <label>
+        To year
+        <input id="toYear" type="number" inputmode="numeric" />
+      </label>
+      <button id="startQuizBtn" class="wide primary" type="button">Start quiz</button>
+      <button id="resetStatsBtn" class="secondary" type="button">Reset stats</button>
+      <button id="backFromQuizBtn" class="secondary wide" type="button">Back</button>
+    </section>
+
+    <section id="swipeControls" class="card controls hidden">
+      <label class="wide">
+        Start year
+        <input id="startSwipeYear" type="number" inputmode="numeric" />
+      </label>
+      <button id="startSwipeBtn" class="wide primary" type="button">Start swipe mode</button>
+      <button id="backFromSwipeBtn" class="secondary wide" type="button">Back</button>
+    </section>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+  </script>
+</body>
+</html>
