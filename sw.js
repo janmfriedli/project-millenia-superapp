@@ -1,10 +1,11 @@
-const CACHE_NAME = "project-millenia-v8";
+const CACHE_NAME = "project-millenia-v9";
 const APP_FILES = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./data.js",
+  "./tags.js",
   "./manifest.json"
 ];
 

@@ -32,6 +32,8 @@ Node is not installed on the development machine. To exercise the app without a 
 
 Cards are per year, not per event. `groupEventsByYear` merges a year's entries into one quiz card, and stars are stored by year number. Swipe Mode looks up a year's events with `eventsForYear`.
 
+Categories live in `tags.js` (loaded between `data.js` and `app.js`). `TAG_GROUPS` lists the categories in their display groups, and `YEAR_TAGS` maps a year to at most 3 of them. A year missing from `YEAR_TAGS` counts as "Other". Quiz by Year and Quiz by Event filter by the selected categories, where a year matches if it has any selected tag. The selection persists in `localStorage` under `millenia.selectedTags`. A year added to `data.js` needs its tags added here too.
+
 All quiz types go through `startQuiz()`. `quizMode` sets the question direction (`year-to-event` or `event-to-year`), and `starredOnly` replaces the year-range filter with the starred years.
 
 ### Service worker

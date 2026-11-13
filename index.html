@@ -73,6 +73,13 @@
         To year
         <input id="toYear" type="number" inputmode="numeric" />
       </label>
+      <div id="tagFilter" class="wide tagFilter">
+        <div class="tagFilterHead">
+          <span class="filterLabel">Categories</span>
+          <button id="clearTagsBtn" class="clearTags" type="button">All</button>
+        </div>
+        <div id="tagChips"></div>
+      </div>
       <button id="startQuizBtn" class="wide primary" type="button">Start quiz</button>
       <button id="resetStatsBtn" class="secondary" type="button">Reset stats</button>
       <button id="backFromQuizBtn" class="secondary wide" type="button">Back</button>
@@ -89,6 +96,7 @@
   </main>
 
   <script src="data.js"></script>
+  <script src="tags.js"></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

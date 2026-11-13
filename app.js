@@ -12,6 +12,9 @@ const startQuizBtn = document.getElementById("startQuizBtn");
 const resetStatsBtn = document.getElementById("resetStatsBtn");
 const backFromQuizBtn = document.getElementById("backFromQuizBtn");
 const quizControls = document.getElementById("quizControls");
+const tagFilter = document.getElementById("tagFilter");
+const tagChips = document.getElementById("tagChips");
+const clearTagsBtn = document.getElementById("clearTagsBtn");
 
 const quiz = document.getElementById("quiz");
 const progress = document.getElementById("progress");
@@ -68,6 +71,124 @@ function saveStarredYears() {
   } catch {
     // Storage unavailable: stars still work until the page is closed.
   }
+}
+
+const OTHER_TAG = "Other";
+const TAG_STORAGE_KEY = "millenia.selectedTags";
+const ALL_TAGS = [...TAG_GROUPS.flatMap(group => group.tags), OTHER_TAG];
+const selectedTags = loadSelectedTags();
+
+function loadSelectedTags() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TAG_STORAGE_KEY));
+    return new Set(Array.isArray(saved) ? saved.filter(tag => ALL_TAGS.includes(tag)) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSelectedTags() {
+  try {
+    localStorage.setItem(TAG_STORAGE_KEY, JSON.stringify([...selectedTags]));
+  } catch {
+    // Storage unavailable: the selection still works until the page is closed.
+  }
+}
+
+function tagsForYear(year) {
+  return YEAR_TAGS[year] || [OTHER_TAG];
+}
+
+function filterEventsByTags(events) {
+  if (selectedTags.size === 0) return events;
+  return events.filter(event => tagsForYear(Number(event.year)).some(tag => selectedTags.has(tag)));
+}
+
+function warnAboutTagProblems() {
+  const dataYears = new Set(YEAR_EVENTS.map(item => Number(item.year)));
+  Object.entries(YEAR_TAGS).forEach(([year, tags]) => {
+    if (!dataYears.has(Number(year))) console.warn(`tags.js: ${year} has tags but no events`);
+    if (tags.length > 3) console.warn(`tags.js: ${year} has more than 3 tags`);
+    tags.filter(tag => !ALL_TAGS.includes(tag) || tag === OTHER_TAG)
+      .forEach(tag => console.warn(`tags.js: ${year} has unknown tag "${tag}"`));
+  });
+}
+
+function renderTagChips() {
+  clearElement(tagChips);
+  const groups = TAG_GROUPS.map((group, index) => ({
+    name: group.name,
+    tags: index === TAG_GROUPS.length - 1 ? [...group.tags, OTHER_TAG] : group.tags
+  }));
+
+  groups.forEach(group => {
+    const groupEl = document.createElement("div");
+    groupEl.className = "chipGroup";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "chipGroupName";
+    nameEl.textContent = group.name;
+
+    const chipsEl = document.createElement("div");
+    chipsEl.className = "chips";
+
+    group.tags.forEach(tag => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chip";
+      chip.dataset.tag = tag;
+      chip.textContent = tag;
+      chipsEl.appendChild(chip);
+    });
+
+    groupEl.append(nameEl, chipsEl);
+    tagChips.appendChild(groupEl);
+  });
+
+  updateTagChips();
+}
+
+function updateTagChips() {
+  tagChips.querySelectorAll(".chip").forEach(chip => {
+    const isOn = selectedTags.has(chip.dataset.tag);
+    chip.classList.toggle("isOn", isOn);
+    chip.setAttribute("aria-pressed", String(isOn));
+  });
+  clearTagsBtn.classList.toggle("isOn", selectedTags.size === 0);
+  updateStartQuizLabel();
+}
+
+function toggleTag(tag) {
+  if (selectedTags.has(tag)) {
+    selectedTags.delete(tag);
+  } else {
+    selectedTags.add(tag);
+  }
+  saveSelectedTags();
+  updateTagChips();
+}
+
+function eventsInChosenRange() {
+  const from = Number(fromYearInput.value);
+  const to = Number(toYearInput.value);
+  if (fromYearInput.value === "" || toYearInput.value === "" || !Number.isFinite(from) || !Number.isFinite(to)) {
+    return null;
+  }
+  const min = Math.min(from, to);
+  const max = Math.max(from, to);
+  return YEAR_EVENTS.filter(item => Number(item.year) >= min && Number(item.year) <= max);
+}
+
+function updateStartQuizLabel() {
+  if (starredOnly) return;
+  const base = quizMode === "year-to-event" ? "Start Quiz by Year" : "Start Quiz by Event";
+  const inRange = eventsInChosenRange();
+  if (!inRange) {
+    startQuizBtn.textContent = base;
+    return;
+  }
+  const yearCount = new Set(filterEventsByTags(inRange).map(item => Number(item.year))).size;
+  startQuizBtn.textContent = `${base} (${yearCount} ${yearCount === 1 ? "year" : "years"})`;
 }
 
 function toggleStar(year) {
@@ -202,6 +323,7 @@ function showHome() {
 function setRangeFieldsVisible(isVisible) {
   fromYearInput.closest("label").classList.toggle("hidden", !isVisible);
   toYearInput.closest("label").classList.toggle("hidden", !isVisible);
+  tagFilter.classList.toggle("hidden", !isVisible);
 }
 
 function chooseStarredQuiz() {
@@ -225,7 +347,7 @@ function chooseQuiz(mode) {
   swipeView.classList.add("hidden");
   quiz.classList.add("hidden");
   quizControls.classList.remove("hidden");
-  startQuizBtn.textContent = mode === "year-to-event" ? "Start Quiz by Year" : "Start Quiz by Event";
+  updateStartQuizLabel();
   scrollToTopCard(quizControls);
 }
 
@@ -244,17 +366,14 @@ function startQuiz() {
   if (starredOnly) {
     filteredEvents = YEAR_EVENTS.filter(item => starredYears.has(Number(item.year)));
   } else {
-    const from = Number(fromYearInput.value);
-    const to = Number(toYearInput.value);
+    const inRange = eventsInChosenRange();
 
-    if (!Number.isFinite(from) || !Number.isFinite(to)) {
+    if (!inRange) {
       alert("Please enter a valid year range.");
       return;
     }
 
-    const min = Math.min(from, to);
-    const max = Math.max(from, to);
-    filteredEvents = YEAR_EVENTS.filter(item => Number(item.year) >= min && Number(item.year) <= max);
+    filteredEvents = filterEventsByTags(inRange);
   }
 
   deck = shuffle(groupEventsByYear(filteredEvents));
@@ -267,7 +386,9 @@ function startQuiz() {
       alert("You have no starred years left.");
       showHome();
     } else {
-      alert("No event cards found in this year range.");
+      alert(selectedTags.size > 0
+        ? "No event cards found for this year range and categories."
+        : "No event cards found in this year range.");
     }
     return;
   }
@@ -426,5 +547,19 @@ swipeView.addEventListener("touchend", event => {
   }
 }, { passive: true });
 
+tagChips.addEventListener("click", event => {
+  const chip = event.target.closest(".chip");
+  if (chip) toggleTag(chip.dataset.tag);
+});
+clearTagsBtn.addEventListener("click", () => {
+  selectedTags.clear();
+  saveSelectedTags();
+  updateTagChips();
+});
+fromYearInput.addEventListener("input", updateStartQuizLabel);
+toYearInput.addEventListener("input", updateStartQuizLabel);
+
 setDefaultYears();
+warnAboutTagProblems();
+renderTagChips();
 showHome();
